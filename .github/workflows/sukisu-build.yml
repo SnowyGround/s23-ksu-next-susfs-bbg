@@ -74,14 +74,13 @@ jobs:
           #patch -p1 --fuzz=3 < 10_enable_susfs_for_ksu.patch
           #cd ..
           # Adding apk_sign for other manager
-          sed -i '/return check_v2_signature(path, false, NULL);/c\
-          return check_v2_signature(path, expected_manager_size, expected_manager_hash)\
-          || check_v2_signature(path, 0x39b, "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800")   // WKSU\
-          || check_v2_signature(path, 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7");  // KernelSU-NEXT' \
-          KernelSU/kernel/apk_sign.c
+          sed -i '/EXPECTED_SIZE_NEKO/a\
+          {0x39b, "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800"}, // WKSU\n\
+          {0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"}, // KernelSU-NEXT' KernelSU/kernel/apk_sign.c
 
-
-          
+          # Enable multi-manager support
+          sed -i '/config KSU_MULTI_MANAGER_SUPPORT/{:a; n; s/^\s*default n/default y/; ta;}' KernelSU/kernel/Kconfig 
+                    
           # Integrate scope-minimized manual KernelSU hooks via a patch
           #curl -L -o manual-hook.patch https://github.com/WildKernels/kernel_patches/raw/f2227a36f02adf3776fc9d432734faf04787f3fa/next/scope_min_manual_hooks_v1.4.patch
           #patch -p1 --fuzz=3 < manual-hook.patch
@@ -89,7 +88,7 @@ jobs:
           echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/gki_defconfig
           # SukiSU KPM
           echo "CONFIG_KPM=y" >> ./arch/arm64/configs/gki_defconfig
-
+          sed -i '/config KPM/{:a; n; s/^\s*default n/default y/; ta;}' KernelSU/kernel/Kconfig
           
           # Adding BBG support
           wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
