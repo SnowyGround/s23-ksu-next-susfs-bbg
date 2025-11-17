@@ -74,9 +74,14 @@ jobs:
           #patch -p1 --fuzz=3 < 10_enable_susfs_for_ksu.patch
           #cd ..
           # Adding apk_sign for other manager
+          sed -i '/#define EXPECTED_HASH_NEKO/a\
+          \n// WKSU\n#define EXPECTED_SIZE_WKSU   0x39b\n#define EXPECTED_HASH_WKSU   "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800"\n\
+          \n// KSUN\n#define EXPECTED_SIZE_KSUN   0x3e6\n#define EXPECTED_HASH_KSUN   "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"' KernelSU/kernel/manager_sign.h
+
+          
           sed -i '/EXPECTED_SIZE_NEKO/a\
-          {0x39b, "593d4ce870c02468639efeef631e07ca4d852d63f154be56706229f9a5be0800"}, // WKSU\n\
-          {0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"}, // KernelSU-NEXT' KernelSU/kernel/apk_sign.c
+          {EXPECTED_SIZE_WKSU, EXPECTED_HASH_WKSU}, // WKSU\n\
+          {EXPECTED_SIZE_KSUN, EXPECTED_HASH_KSUN}, // KernelSU-NEXT' KernelSU/kernel/apk_sign.c
 
           # Enable multi-manager support
           sed -i '/config KSU_MULTI_MANAGER_SUPPORT/{:a; n; s/^\s*default n/default y/; ta;}' KernelSU/kernel/Kconfig 
