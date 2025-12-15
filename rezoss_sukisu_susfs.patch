@@ -14,7 +14,7 @@ diff --git a/KernelSU/kernel/Kconfig b/KernelSU/kernel/Kconfig
 index cc4dbb3a..393e16cd 100644
 --- a/KernelSU/kernel/Kconfig
 +++ b/KernelSU/kernel/Kconfig
-@@@ -33,4 +33,94 @@
+@@ -33,4 +33,94 @@
      select KALLSYMS
      select KALLSYMS_ALL
  
