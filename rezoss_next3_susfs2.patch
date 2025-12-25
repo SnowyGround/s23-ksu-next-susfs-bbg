@@ -668,17 +668,17 @@ diff --git a/KernelSU-Next/kernel/setuid_hook.c b/KernelSU-Next/kernel/setuid_ho
 index fed3993d..dd6f0bb2 100644
 --- a/KernelSU-Next/kernel/setuid_hook.c
 +++ b/KernelSU-Next/kernel/setuid_hook.c
-@@ -27,6 +27,9 @@
+@@ -11,6 +11,9 @@
+ #include <linux/types.h>
  #include <linux/uaccess.h>
  #include <linux/uidgid.h>
- #include <linux/version.h>
 +#ifdef CONFIG_KSU_SUSFS
-+#include <linux/susfs.h>
++#include <linux/susfs_def.h>
 +#endif // #ifdef CONFIG_KSU_SUSFS
  
  #include "allowlist.h"
  #include "setuid_hook.h"
-@@ -36,9 +39,33 @@
+@@ -20,13 +23,40 @@
  #include "selinux/selinux.h"
  #include "seccomp_cache.h"
  #include "supercalls.h"
@@ -712,7 +712,14 @@ index fed3993d..dd6f0bb2 100644
  static bool ksu_enhanced_security_enabled = false;
  
  static int enhanced_security_feature_get(u64 *value)
-@@ -77,6 +104,7 @@ static void ksu_install_manager_fd_tw_func(struct callback_head *cb)
+ {
++#ifdef CONFIG_KSU_SUSFS
++#include <linux/susfs.h>
++#endif // #ifdef CONFIG_KSU_SUSFS
+     *value = ksu_enhanced_security_enabled ? 1 : 0;
+     return 0;
+ }
+@@ -52,6 +82,7 @@
      kfree(cb);
  }
  
@@ -720,7 +727,7 @@ index fed3993d..dd6f0bb2 100644
  int ksu_handle_setresuid(uid_t ruid, uid_t euid, uid_t suid)
  {
      // we rely on the fact that zygote always call setresuid(3) with same uids
-@@ -145,6 +173,102 @@ int ksu_handle_setresuid(uid_t ruid, uid_t euid, uid_t suid)
+@@ -120,6 +151,102 @@
  
      return 0;
  }
@@ -1023,9 +1030,9 @@ index f66be06b..fdea34e8 100644
  
  #include "supercalls.h"
  #include "arch.h"
-@@ -24,7 +28,13 @@
+@@ -23,7 +27,13 @@
+ #include "manager.h"
  #include "selinux/selinux.h"
- #include "objsec.h"
  #include "file_wrapper.h"
 +#ifndef CONFIG_KSU_SUSFS
  #include "syscall_hook_manager.h"
@@ -1037,7 +1044,7 @@ index f66be06b..fdea34e8 100644
  
  #include "tiny_sulog.c"
  
-@@ -113,6 +123,9 @@
+@@ -112,6 +122,9 @@
  			boot_complete_lock = true;
  			pr_info("boot_complete triggered\n");
  			on_boot_completed();
@@ -1047,7 +1054,7 @@ index f66be06b..fdea34e8 100644
  		}
  		break;
  	}
-@@ -404,6 +417,7 @@
+@@ -363,6 +376,7 @@
  
  	switch (cmd.operation) {
  	case KSU_MARK_GET: {
@@ -1055,7 +1062,7 @@ index f66be06b..fdea34e8 100644
  		// Get task mark status
  		ret = ksu_get_task_mark(cmd.pid);
  		if (ret < 0) {
-@@ -412,8 +426,19 @@
+@@ -371,8 +385,19 @@
  		}
  		cmd.result = (u32)ret;
  		break;
@@ -1075,7 +1082,7 @@ index f66be06b..fdea34e8 100644
  		if (cmd.pid == 0) {
  			ksu_mark_all_process();
  		} else {
-@@ -424,9 +449,15 @@
+@@ -383,9 +408,15 @@
  				return ret;
  			}
  		}
@@ -1091,7 +1098,7 @@ index f66be06b..fdea34e8 100644
  		if (cmd.pid == 0) {
  			ksu_unmark_all_process();
  		} else {
-@@ -437,11 +468,20 @@
+@@ -396,11 +427,20 @@
  				return ret;
  			}
  		}
@@ -1112,7 +1119,7 @@ index f66be06b..fdea34e8 100644
  		break;
  	}
  	default: {
-@@ -732,6 +772,7 @@
+@@ -744,6 +784,7 @@
  	kfree(tw);
  }
  
@@ -1120,7 +1127,7 @@ index f66be06b..fdea34e8 100644
  static int reboot_handler_pre(struct kprobe *p, struct pt_regs *regs)
  {
  	struct pt_regs *real_regs = PT_REAL_REGS(regs);
-@@ -789,6 +830,121 @@
+@@ -805,6 +846,121 @@
  	.symbol_name = REBOOT_SYMBOL,
  	.pre_handler = reboot_handler_pre,
  };
@@ -1242,7 +1249,7 @@ index f66be06b..fdea34e8 100644
  
  void ksu_supercalls_init(void)
  {
-@@ -800,17 +956,23 @@
+@@ -816,6 +972,7 @@
                  ksu_ioctl_handlers[i].cmd);
      }
  
@@ -1250,16 +1257,18 @@ index f66be06b..fdea34e8 100644
  	int rc = register_kprobe(&reboot_kp);
  	if (rc) {
  		pr_err("reboot kprobe failed: %d\n", rc);
- 	} else {
- 		pr_info("reboot kprobe registered successfully\n");
+@@ -824,11 +981,16 @@
  	}
+ 
+     sulog_init_heap(); // grab heap memory
 +#endif // #ifndef CONFIG_KSU_SUSFS	
  }
  
  void ksu_supercalls_exit(void)
  {
+-    unregister_kprobe(&reboot_kp);
 +#ifndef CONFIG_KSU_SUSFS	
-     unregister_kprobe(&reboot_kp);
++   unregister_kprobe(&reboot_kp);
 +#else
 +    pr_info("susfs: do nothing\n");
 +#endif // #ifndef CONFIG_KSU_SUSFS	
