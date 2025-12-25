@@ -16,6 +16,8 @@ jobs:
       - name: Set up the toolchain
         run: |
           sudo apt update
+          sudo apt purge -y firefox
+          sudo apt-mark hold firefox
           sudo apt upgrade -y
           sudo apt install -y \
           bc bison flex build-essential git curl \
