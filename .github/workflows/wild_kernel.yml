@@ -89,18 +89,7 @@ jobs:
           cd kernel
           chmod +x scripts/build.sh
           ./scripts/build.sh 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
-
-      - name: KPM Patching
-        run: |
-          cd kernel/out/arch/arm64/boot/
-          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch
-          chmod 777 patch
-          ./patch
-          rm -rf Image Image.gz
-          mv oImage Image
-          gzip -k -9 -n Image
-          cd ../../../../..        
-
+    
       - name: Package image with AnyKernel3
         id: package
         run: |
