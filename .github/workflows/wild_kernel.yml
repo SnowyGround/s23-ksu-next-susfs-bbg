@@ -64,11 +64,12 @@ jobs:
           cp -rv ./susfs4ksu/kernel_patches/fs/* fs/
           cp -rv ./susfs4ksu/kernel_patches/include/linux/* include/linux/
           patch -p1 --fuzz=3 < ./50_add_susfs_in_gki-android13-5.15.patch
-
                     
-          # Integrate Wild_KSU scope_min_manual_hooks_v1.6.patch
-          curl -L -o manual-hook.patch https://github.com/WildKernels/kernel_patches/raw/main/next/scope_min_manual_hooks_v1.6.patch         
-          patch -p1 --fuzz=3 < manual-hook.patch          
+          # Integrate Sukisu scope_min_manual_hooks_v1.6.patch
+          curl -L -o manual-hook.patch https://github.com/SukiSU-Ultra/SukiSU_patch/raw/83aa64b7548890bb1f2eff6c990c03a1802df27b/hooks/scope_min_manual_hooks_v1.6.patch
+          patch -p1 --fuzz=3 < manual-hook.patch
+          echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/gki_defconfig   
 
           # Adding BBG support
           wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
