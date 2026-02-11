@@ -1,4 +1,4 @@
-name: Build kernel (SukiSU, SUSFS, Manual Hooks, KPM Patched)
+name: Build kernel (ReSukiSU, SUSFS, Manual Hooks, KPM Patched)
 on:
   #schedule:
     #- cron: '0 4 * * *'  # Runs every day at 04:00 UTC
