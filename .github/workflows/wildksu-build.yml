@@ -40,7 +40,7 @@ jobs:
           cd kernel
           
           # Integrate the wild WildKSU 
-          curl -LSs "https://raw.githubusercontent.com/WildKernels/Wild_KSU/wild/kernel/setup.sh" | bash -s wild
+          curl -LSs "https://raw.githubusercontent.com/WildKernels/Wild_KSU/wild/kernel/setup.sh" | bash -s stable
           
           # Determine the tag of the latest release of WildKSU
           echo "WILDKSU_VERSION=$(curl -s "https://api.github.com/repos/WildKernels/Wild_KSU/tags" \
