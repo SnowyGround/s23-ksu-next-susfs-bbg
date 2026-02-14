@@ -1,4 +1,4 @@
-name: Build kernel (ReSukiSU, SUSFS, Manual Hooks, KPM Patched)
+name: Build kernel (ReSukiSU, Manual Hooks, KPM Patched)
 on:
   #schedule:
     #- cron: '0 4 * * *'  # Runs every day at 04:00 UTC
@@ -6,7 +6,6 @@ on:
   #push:
     #paths:
       #- '.github/workflows/kernel-build.yml'
-      #- 'rezoss_sukisu_susfs.patch'
       #- 'anykernel.zip'
 
 jobs:
@@ -34,7 +33,7 @@ jobs:
           # Determine the current kernel version
           echo "KERNEL_VERSION=$(grep -m1 '^SUBLEVEL =' ./kernel/Makefile | awk '{print $3}')" >> $GITHUB_ENV
           
-      - name: Apply the ReSukiSU, SUSFS and Baseband Guard
+      - name: Apply ReSukiSU and Baseband Guard
         run: |
           set -euxo pipefail
           cd kernel
@@ -49,25 +48,7 @@ jobs:
           # Compute version code = commit count + 10200 (same scheme as KernelSU CI)
           COMMITS="$(git -C "./KernelSU" rev-list --count HEAD || echo 0)"
           RESUKISU_VER_CODE=$((40000 + COMMITS - 2815))
-          echo "RESUKISU_VER_CODE=$RESUKISU_VER_CODE" >> "$GITHUB_ENV"              
-          
-          # Integrate latest SUSFS
-          git clone -b gki-android13-5.15 --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git susfs4ksu
-
-          # Determine susfs version
-          cd susfs4ksu
-          SUSFS_COMMIT=$(git rev-parse --short HEAD)
-          SUSFS_VERSION=$(sed -n 's/.*#define[[:space:]]\+SUSFS_VERSION[[:space:]]\+"v\{0,1\}\([0-9.]\+\)".*/\1/p' kernel_patches/include/linux/susfs.h | tr -d '.')
-          echo "SUSFS_VERSION=$SUSFS_VERSION" >> "$GITHUB_ENV"
-          echo "SUSFS_COMMIT=$SUSFS_COMMIT" >> "$GITHUB_ENV"
-          cd ..
-
-          # Begin susfs patching
-          cp -rv ./susfs4ksu/kernel_patches/fs/* ./fs/
-          cp -rv ./susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-          cp ./susfs4ksu/kernel_patches/50_add_susfs_in_gki-android13-5.15.patch ./
-          patch -p1 < ./50_add_susfs_in_gki-android13-5.15.patch
-          #patch -p1 --fuzz=3 < "${GITHUB_WORKSPACE}/rezoss_sukisu_susfs.patch"                
+          echo "RESUKISU_VER_CODE=$RESUKISU_VER_CODE" >> "$GITHUB_ENV"                              
 
           
                     
@@ -118,7 +99,7 @@ jobs:
           unzip "${GITHUB_WORKSPACE}/anykernel.zip" -d anykernel/
           cp kernel/out/arch/arm64/boot/Image.gz anykernel/
           # Build final name
-          ZIP_NAME="common-6.12.${KERNEL_VERSION}-3d64R-resukisu${RESUKISU_VERSION}-${RESUKISU_VER_CODE}_KPM-susfs${SUSFS_VERSION}-manual-$(date +%d%m%y-%H%M%S)"
+          ZIP_NAME="common-6.12.58-3d64R-resukisu${RESUKISU_VERSION}-${RESUKISU_VER_CODE}_KPM-manual-$(date +%d%m%y-%H%M%S)"
           cd anykernel
           zip -r0 ../"${ZIP_NAME}".zip ./*
           echo "zip_path=$GITHUB_WORKSPACE/${ZIP_NAME}.zip" >> "$GITHUB_OUTPUT"
