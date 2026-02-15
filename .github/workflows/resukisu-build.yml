@@ -34,7 +34,7 @@ jobs:
           # Determine the current kernel version
           echo "KERNEL_VERSION=$(grep -m1 '^SUBLEVEL =' ./kernel/Makefile | awk '{print $3}')" >> $GITHUB_ENV
           
-      - name: Apply ReSukiSU and Baseband Guard
+      - name: Apply ReSukiSU
         run: |
           set -euxo pipefail
           cd kernel
@@ -93,12 +93,6 @@ jobs:
           # ReSukiSU KPM
           echo "CONFIG_KPM=y" >> ./arch/arm64/configs/gki_defconfig
           sed -i '/config KPM/{:a; n; s/^\s*default n/default y/; ta;}' KernelSU/kernel/Kconfig
-          
-          # Adding BBG support
-          #wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
-          #echo "CONFIG_BBG=y" >> ./arch/arm64/configs/gki_defconfig
-          #sed -i 's/\(CONFIG_LSM="[^"]*\)"/\1,baseband_guard"/' ./arch/arm64/configs/gki_defconfig
-          #sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/lockdown/lockdown,baseband_guard/ } }' ./security/Kconfig
           
 
       - name: Set up swap space
